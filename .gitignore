@@ -1,3 +1,6 @@
 subapp
 submissionsapp/__pycache__
 submissionsapp/app/__pycache__
+submissionsapp/app/migrations/__pycache__
+images
+submissions
