@@ -14,9 +14,10 @@ class Hackathon(models.Model):
     background_image = models.FileField(upload_to='images/')
     hackathon_image = models.FileField(upload_to='images/')
     submission_type = models.CharField(max_length=5, choices=SUBMISSION_TYPE_CHOICES)
-    start_datetime = models.DateTimeField(auto_now_add=True)
-    end_datetime = models.DateTimeField(auto_now=True)
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
     reward_prize = models.CharField(max_length=100)
+    registered_users = models.ManyToManyField(User, blank=True, null=True, default=[])
 
     def __str__(self):
         return self.title

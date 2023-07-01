@@ -1,9 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import views, viewsets
 from .models import Hackathon, Submission
 from .serializers import HackathonSerializer, SubmissionSerializer, UserSerializer
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser, MultiPartParser
 from django.contrib.auth.models import User
+from datetime import datetime
 
 class HackathonView(viewsets.ModelViewSet):
     queryset = Hackathon.objects.all()
@@ -55,6 +56,9 @@ class SubmissionView(viewsets.ModelViewSet):
         jsonData = dict(request.data)
         for key, value in jsonData.items():
             jsonData[key] = value[0]
+        hackathon_obj = Hackathon.objects.get(id=jsonData["hackathon"])
+        if not hackathon_obj.registered_users.filter(id=jsonData["user"]).exists():
+            return JsonResponse({"message": "User is not registered for this hackathon!"})
         serializer = SubmissionSerializer(data=jsonData)
         if serializer.is_valid():
             serializer.save()
@@ -99,3 +103,36 @@ class UserView(viewsets.ModelViewSet):
     
     def destroy(self, request, pk=None):
         return super().destroy(request, pk)
+    
+class RegisterView(views.APIView):
+    parser_classes = [JSONParser]
+
+    def post(self, request, hackathon_id):
+        jsonData = JSONParser().parse(request)
+        hackathon = Hackathon.objects.get(id=hackathon_id)
+        hackathon.registered_users.add(jsonData["user_id"])
+        hackathon.save()
+        return JsonResponse({"message": "User registered successfully!"})
+    
+    def delete(self, request, hackathon_id):
+        jsonData = JSONParser().parse(request)
+        hackathon = Hackathon.objects.get(id=hackathon_id)
+        hackathon.registered_users.remove(jsonData["user_id"])
+        hackathon.save()
+        return JsonResponse({"message": "User unregistered successfully!"})
+    
+class HackathonEnrolledView(views.APIView):
+    parser_classes = [JSONParser]
+
+    def get(self, request, user_id):
+        hackathons = Hackathon.objects.filter(registered_users__in=user_id)
+        serializer = HackathonSerializer(hackathons, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    
+class HackathonSubmissionsView(views.APIView):
+    parser_classes = [JSONParser]
+
+    def get(self, request, user_id, hackathon_id):
+        submissions = Submission.objects.filter(hackathon=hackathon_id, user=user_id)
+        serializer = SubmissionSerializer(submissions, many=True)
+        return JsonResponse(serializer.data, safe=False)

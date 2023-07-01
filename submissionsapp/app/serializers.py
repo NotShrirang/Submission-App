@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class HackathonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hackathon
-        fields = ['id', 'title', 'description', 'background_image', 'hackathon_image', 'submission_type', 'start_datetime', 'end_datetime', 'reward_prize']
+        fields = ['id', 'title', 'description', 'background_image', 'hackathon_image', 'submission_type', 'start_datetime', 'end_datetime', 'reward_prize', 'registered_users']
 
 class SubmissionSerializer(serializers.ModelSerializer):
     class Meta:
