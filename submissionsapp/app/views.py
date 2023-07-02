@@ -1,4 +1,6 @@
 from rest_framework import views, viewsets
+from rest_framework.permissions import IsAuthenticated
+from .authentications import JWTAuthenticationOnlyForAPI
 from .models import Hackathon, Submission
 from .serializers import HackathonSerializer, SubmissionSerializer, UserSerializer
 from django.http import JsonResponse
@@ -7,6 +9,8 @@ from django.contrib.auth.models import User
 from datetime import datetime
 
 class HackathonView(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthenticationOnlyForAPI]
+    permission_classes = [IsAuthenticated]
     queryset = Hackathon.objects.all()
     serializer_class = HackathonSerializer
     allowed_methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
@@ -41,6 +45,8 @@ class HackathonView(viewsets.ModelViewSet):
         return JsonResponse({"message": "Hackathon deleted successfully!"})
 
 class SubmissionView(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthenticationOnlyForAPI]
+    permission_classes = [IsAuthenticated]
     queryset = Submission.objects.all()
     serializer_class = SubmissionSerializer
 
@@ -76,6 +82,8 @@ class SubmissionView(viewsets.ModelViewSet):
         return JsonResponse({"message": "Submission deleted successfully!"})
 
 class UserView(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthenticationOnlyForAPI]
+    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
@@ -83,17 +91,10 @@ class UserView(viewsets.ModelViewSet):
         return super().list(request)
     
     def retrieve(self, request, pk=None):
-        queryset = User.objects.get(id=pk)
-        serializer = UserSerializer(queryset)
-        return JsonResponse(serializer.data)
-    
+        return super().retrieve(request, pk)
+
     def create(self, request):
-        jsonData = JSONParser().parse(request)
-        serializer = UserSerializer(data=jsonData)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors)
+        return JsonResponse({"message": "POST method not allowed!"})
     
     def update(self, request, pk=None):
         return super().update(request, pk)
@@ -102,8 +103,21 @@ class UserView(viewsets.ModelViewSet):
         return super().partial_update(request, pk)
     
     def destroy(self, request, pk=None):
-        return super().destroy(request, pk)
-    
+        super().destroy(request, pk)
+        return JsonResponse({"message": "User deleted successfully!"})
+
+
+class UserCreateView(views.APIView):
+    parser_classes = [JSONParser]
+
+    def post(self, request):
+        jsonData = JSONParser().parse(request)
+        serializer = UserSerializer(data=jsonData)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data)
+        return JsonResponse(serializer.errors)
+
 class RegisterView(views.APIView):
     parser_classes = [JSONParser]
 
