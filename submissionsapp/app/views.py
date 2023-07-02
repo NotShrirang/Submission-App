@@ -62,7 +62,23 @@ class SubmissionView(viewsets.ModelViewSet):
         jsonData = dict(request.data)
         for key, value in jsonData.items():
             jsonData[key] = value[0]
+        IMAGES = ["image/png", "image/jpeg", "image/jpg"]
         hackathon_obj = Hackathon.objects.get(id=jsonData["hackathon"])
+        hour = hackathon_obj.end_datetime.hour
+        minute = hackathon_obj.end_datetime.minute
+        second = hackathon_obj.end_datetime.second
+        day = hackathon_obj.end_datetime.day
+        month = hackathon_obj.end_datetime.month
+        year = hackathon_obj.end_datetime.year
+        datetime_obj = datetime(year, month, day, hour, minute, second)
+        if datetime.now() > datetime_obj:
+            return JsonResponse({"message": "Hackathon ended!"})
+        if hackathon_obj.submission_type == "image" and jsonData["submission_file"].content_type not in IMAGES:
+            return JsonResponse({"message": "Invalid file type. File type should be image!"})
+        if hackathon_obj.submission_type == "file" and not jsonData["submission_file"].content_type.startswith("application"):
+            return JsonResponse({"message": "Invalid file type."})
+        if hackathon_obj.submission_type == "link" and not jsonData["submission_file"].startswith("http"):
+            return JsonResponse({"message": "Invalid link!"})
         if not hackathon_obj.registered_users.filter(id=jsonData["user"]).exists():
             return JsonResponse({"message": "User is not registered for this hackathon!"})
         serializer = SubmissionSerializer(data=jsonData)
