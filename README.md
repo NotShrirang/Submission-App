@@ -13,7 +13,16 @@ git clone https://github.com/NotShrirang/Submission-App.git
 pip install -r requirements.txt
 ```
 
-#### 3. Run the backend server -
+#### 3. Migrate schema to database -
+```
+python manage.py makemigrations
+```
+
+```
+python manage.py migrate
+```
+
+#### 4. Run the backend server -
 ```
 python manage.py runserver
 ```
